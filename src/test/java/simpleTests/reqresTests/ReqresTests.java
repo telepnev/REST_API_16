@@ -1,22 +1,49 @@
-package simpleTests;
+package simpleTests.reqresTests;
 
+import io.restassured.RestAssured;
 import io.restassured.builder.ResponseSpecBuilder;
+import io.restassured.http.ContentType;
 import io.restassured.specification.ResponseSpecification;
-import model.SingleUserModel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-import static io.restassured.RestAssured.*;
+import static Helpers.ApiHelpers.getToken;
+import static Utils.FileUtils.readStringFromFile;
+import static io.restassured.RestAssured.baseURI;
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
 
-public class SimpleTests {
-
+public class ReqresTests {
     @BeforeEach
     void beforeEach() {
-        baseURI = "https://reqres.in";
+        RestAssured.baseURI = "https://reqres.in";
     }
+
+    //    POST
+    @Test
+    public void successLoginTest() {
+        String data = readStringFromFile("src/test/resources/user_creat_login.json");
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(data)
+                .when()
+                .post("/api/login")
+                .then()
+                .statusCode(200)
+                .log().body()
+                .body("token", is(notNullValue()));
+    }
+
+    @Test
+    public void successGetUserToken() {
+        String userToken = getToken();
+        System.out.println(userToken);
+    }
+
+//    GET
 
     @Test
     public void mainPageTest() {
@@ -56,21 +83,6 @@ public class SimpleTests {
                 .spec(specResource);
     }
 
-    @Test
-    public void singleUserAsModelTest() {
-       SingleUserModel singleUserValue = given().when()
-                .get(baseURI + "/api/unknown/2")
-                .then()
-                .log().body()
-                .statusCode(200)
-                .extract().as(SingleUserModel.class);
-
-
-
-        System.out.println(singleUserValue.toString() + "---- Model");
-
-
-    }
 
     private final ResponseSpecification specResource = new ResponseSpecBuilder()
             .expectBody("data.id", is(2))
@@ -80,4 +92,24 @@ public class SimpleTests {
             .expectBody("data.pantone_value", is("17-2031"))
             .expectStatusCode(200)
             .build();
+
+    //    PUT
+    @Test
+    public void updateUserInfoTest() {
+        String data = readStringFromFile("src/test/resources/user_update.json");
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(data)
+                .when()
+                .put("/api/users/2")
+                .then()
+                .statusCode(200)
+                .log().body()
+                .body("name", is(notNullValue()));
+
+    }
+
+
 }
+
